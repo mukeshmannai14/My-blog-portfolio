@@ -5,6 +5,8 @@ import axios from "axios";
 
 import { auth } from "../firebase/firebaseConfig";
 
+const API_URL = import.meta.env.VITE_API_URL;
+
 function AdminDashboard() {
   const navigate = useNavigate();
 
@@ -44,8 +46,7 @@ function AdminDashboard() {
           return;
         }
 
-        const tokenResult =
-          await getIdTokenResult(user);
+        const tokenResult = await getIdTokenResult(user);
 
         if (tokenResult.claims.admin === true) {
           setIsAdmin(true);
@@ -53,11 +54,7 @@ function AdminDashboard() {
           navigate("/home");
         }
       } catch (error) {
-        console.error(
-          "Admin check failed:",
-          error
-        );
-
+        console.error("Admin check failed:", error);
         navigate("/home");
       } finally {
         setChecking(false);
@@ -86,7 +83,7 @@ function AdminDashboard() {
       const token = await user.getIdToken();
 
       const response = await axios.get(
-        "http://localhost:5000/api/blogs/admin/all",
+        `${API_URL}/api/blogs/admin/all`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -96,10 +93,7 @@ function AdminDashboard() {
 
       setBlogs(response.data);
     } catch (error) {
-      console.error(
-        "Failed to fetch admin blogs:",
-        error
-      );
+      console.error("Failed to fetch admin blogs:", error);
 
       setError(
         error.response?.data?.message ||
@@ -162,7 +156,7 @@ function AdminDashboard() {
         // UPDATE
 
         const response = await axios.put(
-          `http://localhost:5000/api/blogs/${editingBlog._id}`,
+          `${API_URL}/api/blogs/${editingBlog._id}`,
           formData,
           {
             headers: {
@@ -179,14 +173,12 @@ function AdminDashboard() {
           )
         );
 
-        setMessage(
-          "Blog updated successfully!"
-        );
+        setMessage("Blog updated successfully!");
       } else {
         // CREATE
 
         const response = await axios.post(
-          "http://localhost:5000/api/blogs",
+          `${API_URL}/api/blogs`,
           formData,
           {
             headers: {
@@ -200,17 +192,12 @@ function AdminDashboard() {
           ...currentBlogs,
         ]);
 
-        setMessage(
-          "Blog created successfully!"
-        );
+        setMessage("Blog created successfully!");
       }
 
       resetForm();
     } catch (error) {
-      console.error(
-        "Blog save error:",
-        error
-      );
+      console.error("Blog save error:", error);
 
       setError(
         error.response?.data?.message ||
@@ -274,7 +261,7 @@ function AdminDashboard() {
       const token = await user.getIdToken();
 
       await axios.delete(
-        `http://localhost:5000/api/blogs/${blogId}`,
+        `${API_URL}/api/blogs/${blogId}`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -288,14 +275,9 @@ function AdminDashboard() {
         )
       );
 
-      setMessage(
-        "Blog deleted successfully!"
-      );
+      setMessage("Blog deleted successfully!");
     } catch (error) {
-      console.error(
-        "Delete blog error:",
-        error
-      );
+      console.error("Delete blog error:", error);
 
       setError(
         error.response?.data?.message ||
@@ -325,10 +307,9 @@ function AdminDashboard() {
   // STATISTICS
   // =====================================================
 
-  const publishedCount =
-    blogs.filter(
-      (blog) => blog.published
-    ).length;
+  const publishedCount = blogs.filter(
+    (blog) => blog.published
+  ).length;
 
   const totalLikes = blogs.reduce(
     (total, blog) =>
@@ -343,9 +324,7 @@ function AdminDashboard() {
   if (checking) {
     return (
       <div className="min-h-screen bg-slate-950 text-white flex items-center justify-center px-4">
-
         <div className="text-center">
-
           <div className="text-4xl mb-4">
             🔐
           </div>
@@ -353,9 +332,7 @@ function AdminDashboard() {
           <p className="text-slate-400">
             Checking admin access...
           </p>
-
         </div>
-
       </div>
     );
   }
@@ -373,9 +350,7 @@ function AdminDashboard() {
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-10 lg:py-12">
 
-        {/* =================================================
-            HEADER
-        ================================================= */}
+        {/* HEADER */}
 
         <header className="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
 
@@ -404,33 +379,25 @@ function AdminDashboard() {
 
         </header>
 
-        {/* =================================================
-            MESSAGES
-        ================================================= */}
+        {/* MESSAGES */}
 
         {message && (
           <div className="mt-6 rounded-xl border border-green-800 bg-green-950/30 p-4">
-
             <p className="text-sm sm:text-base text-green-400">
               {message}
             </p>
-
           </div>
         )}
 
         {error && (
           <div className="mt-6 rounded-xl border border-red-800 bg-red-950/30 p-4">
-
             <p className="text-sm sm:text-base text-red-400">
               {error}
             </p>
-
           </div>
         )}
 
-        {/* =================================================
-            STATISTICS
-        ================================================= */}
+        {/* STATISTICS */}
 
         <section className="mt-8 sm:mt-10 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6">
 
@@ -502,9 +469,7 @@ function AdminDashboard() {
 
         </section>
 
-        {/* =================================================
-            BLOG MANAGEMENT
-        ================================================= */}
+        {/* BLOG MANAGEMENT */}
 
         <section className="mt-8 sm:mt-10 rounded-2xl border border-slate-800 bg-slate-900 p-5 sm:p-7 lg:p-8">
 
@@ -548,9 +513,7 @@ function AdminDashboard() {
 
           </div>
 
-          {/* =================================================
-              FORM
-          ================================================= */}
+          {/* FORM */}
 
           {showForm && (
             <form
@@ -686,9 +649,7 @@ function AdminDashboard() {
 
         </section>
 
-        {/* =================================================
-            BLOG LIST
-        ================================================= */}
+        {/* BLOG LIST */}
 
         <section className="mt-8 sm:mt-10">
 

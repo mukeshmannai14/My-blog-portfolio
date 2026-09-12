@@ -1,78 +1,66 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
-import { Link } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
+import { auth } from "../firebase/firebaseConfig";
 
 import Navbar from "../components/Navbar";
-import { auth } from "../firebase/firebaseConfig";
-import { useAuth } from "../context/authContext";
+
+const API_URL = import.meta.env.VITE_API_URL;
 
 function Blog() {
-  const { user } = useAuth();
+  const navigate = useNavigate();
 
   const [blogs, setBlogs] = useState([]);
   const [loading, setLoading] = useState(true);
-
   const [error, setError] = useState("");
-  const [likingBlog, setLikingBlog] = useState(null);
 
   // =====================================================
   // FETCH BLOGS
   // =====================================================
 
+  const fetchBlogs = async () => {
+    try {
+      setLoading(true);
+      setError("");
+
+      const response = await axios.get(
+        `${API_URL}/api/blogs`
+      );
+
+      setBlogs(response.data);
+    } catch (error) {
+      console.error("Failed to fetch blogs:", error);
+
+      setError(
+        error.response?.data?.message ||
+          "Failed to load blogs. Please try again."
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
-    const fetchBlogs = async () => {
-      try {
-        setLoading(true);
-        setError("");
-
-        const response = await axios.get(
-          "http://localhost:5000/api/blogs"
-        );
-
-        setBlogs(response.data);
-      } catch (error) {
-        console.error(
-          "Failed to fetch blogs:",
-          error
-        );
-
-        setError(
-          error.response?.data?.message ||
-            "Failed to load blogs."
-        );
-      } finally {
-        setLoading(false);
-      }
-    };
-
     fetchBlogs();
   }, []);
 
   // =====================================================
-  // LIKE / UNLIKE
+  // LIKE BLOG
   // =====================================================
 
   const handleLike = async (blogId) => {
     try {
+      const user = auth.currentUser;
+
       if (!user) {
-        setError("Please login to like a blog.");
+        navigate("/login");
         return;
       }
 
-      setLikingBlog(blogId);
-      setError("");
-
-      const currentUser = auth.currentUser;
-
-      if (!currentUser) {
-        setError("Please login again.");
-        return;
-      }
-
-      const token = await currentUser.getIdToken();
+      const token = await user.getIdToken();
 
       const response = await axios.post(
-        `http://localhost:5000/api/blogs/${blogId}/like`,
+        `${API_URL}/api/blogs/${blogId}/like`,
         {},
         {
           headers: {
@@ -82,50 +70,28 @@ function Blog() {
       );
 
       setBlogs((currentBlogs) =>
-        currentBlogs.map((blog) => {
-          if (blog._id !== blogId) {
-            return blog;
-          }
-
-          return {
-            ...blog,
-            likes: response.data.likes,
-            likedBy: response.data.liked
-              ? [
-                  ...(blog.likedBy || []),
-                  currentUser.uid,
-                ]
-              : (blog.likedBy || []).filter(
-                  (id) => id !== currentUser.uid
-                ),
-          };
-        })
+        currentBlogs.map((blog) =>
+          blog._id === blogId
+            ? {
+                ...blog,
+                likes: response.data.likes,
+                likedBy: response.data.liked
+                  ? [...(blog.likedBy || []), user.uid]
+                  : (blog.likedBy || []).filter(
+                      (id) => id !== user.uid
+                    ),
+              }
+            : blog
+        )
       );
     } catch (error) {
-      console.error(
-        "Like request failed:",
-        error
-      );
+      console.error("Like error:", error);
 
       setError(
         error.response?.data?.message ||
           "Failed to update like."
       );
-    } finally {
-      setLikingBlog(null);
     }
-  };
-
-  // =====================================================
-  // CHECK IF USER LIKED
-  // =====================================================
-
-  const hasLiked = (blog) => {
-    if (!user) {
-      return false;
-    }
-
-    return blog.likedBy?.includes(user.uid);
   };
 
   // =====================================================
@@ -137,281 +103,190 @@ function Blog() {
       <div className="min-h-screen bg-slate-950 text-white">
         <Navbar />
 
-        <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16 lg:py-20">
-
-          <div className="flex min-h-[50vh] items-center justify-center">
-
-            <div className="text-center">
-
-              <div className="text-5xl sm:text-6xl mb-5">
-                📝
-              </div>
-
-              <p className="text-base sm:text-lg text-slate-400">
-                Loading blogs...
-              </p>
-
+        <div className="flex min-h-[70vh] items-center justify-center px-4">
+          <div className="text-center">
+            <div className="text-4xl mb-4">
+              📝
             </div>
 
+            <p className="text-slate-400">
+              Loading blogs...
+            </p>
           </div>
-
-        </main>
+        </div>
       </div>
     );
   }
 
+  // =====================================================
+  // BLOG PAGE
+  // =====================================================
+
   return (
     <div className="min-h-screen bg-slate-950 text-white">
-
-      {/* =================================================
-          NAVBAR
-      ================================================= */}
-
       <Navbar />
 
-      {/* =================================================
-          MAIN
-      ================================================= */}
+      <main className="mx-auto max-w-7xl px-4 py-10 sm:px-6 sm:py-14 lg:px-8">
 
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16 lg:py-20">
+        {/* HEADER */}
 
-        {/* =================================================
-            HEADER
-        ================================================= */}
-
-        <section className="max-w-3xl">
-
-          <p className="text-blue-400 text-sm sm:text-base font-medium uppercase tracking-wider">
+        <section className="text-center">
+          <p className="text-sm font-medium uppercase tracking-wider text-blue-400">
             My Blog
           </p>
 
-          <h1 className="mt-3 text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold leading-tight">
-            Thoughts, tutorials and{" "}
-            <span className="text-blue-500">
-              development insights.
-            </span>
+          <h1 className="mt-3 text-3xl font-bold sm:text-4xl lg:text-5xl">
+            Latest Articles
           </h1>
 
-          <p className="mt-5 sm:mt-6 text-base sm:text-lg text-slate-400 leading-7 sm:leading-8">
-            I write about web development, JavaScript,
-            React, backend development and things I learn
-            while building real-world applications.
+          <p className="mx-auto mt-4 max-w-2xl text-sm leading-7 text-slate-400 sm:text-base">
+            I write about web development, React, Node.js,
+            MongoDB, JavaScript and my learning journey.
           </p>
-
         </section>
 
-        {/* =================================================
-            ERROR
-        ================================================= */}
+        {/* ERROR */}
 
         {error && (
-          <div className="mt-8 rounded-xl border border-red-800 bg-red-950/30 p-4">
-
-            <p className="text-sm sm:text-base text-red-400">
+          <div className="mx-auto mt-8 max-w-3xl rounded-xl border border-red-800 bg-red-950/30 p-4 text-center">
+            <p className="text-sm text-red-400">
               {error}
             </p>
 
+            <button
+              onClick={fetchBlogs}
+              className="mt-3 rounded-lg bg-red-600 px-4 py-2 text-sm font-semibold text-white hover:bg-red-700 transition"
+            >
+              Try Again
+            </button>
           </div>
         )}
 
-        {/* =================================================
-            EMPTY STATE
-        ================================================= */}
+        {/* EMPTY */}
 
         {!error && blogs.length === 0 && (
-          <div className="mt-12 sm:mt-16 rounded-2xl border border-slate-800 bg-slate-900 p-6 sm:p-10 lg:p-16 text-center">
-
-            <div className="text-5xl sm:text-6xl mb-5">
+          <div className="mx-auto mt-10 max-w-2xl rounded-2xl border border-slate-800 bg-slate-900 p-8 text-center sm:p-10">
+            <div className="text-5xl mb-4">
               📝
             </div>
 
-            <h2 className="text-2xl sm:text-3xl font-bold">
-              Blogs coming soon
+            <h2 className="text-xl font-bold">
+              No blogs available
             </h2>
 
-            <p className="mt-3 sm:mt-4 text-sm sm:text-base text-slate-400">
-              Blog posts will appear here once they are
-              published.
+            <p className="mt-2 text-sm text-slate-400">
+              Check back later for new articles.
             </p>
-
           </div>
         )}
 
-        {/* =================================================
-            BLOG GRID
-        ================================================= */}
+        {/* BLOG GRID */}
 
         {blogs.length > 0 && (
-          <section className="mt-10 sm:mt-14 lg:mt-16">
+          <section className="mt-10 grid grid-cols-1 gap-6 sm:mt-12 md:grid-cols-2 lg:grid-cols-3">
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6 lg:gap-8">
+            {blogs.map((blog) => {
+              const user = auth.currentUser;
 
-              {blogs.map((blog) => (
+              const liked = user
+                ? (blog.likedBy || []).includes(user.uid)
+                : false;
 
+              return (
                 <article
                   key={blog._id}
-                  className="group flex flex-col overflow-hidden rounded-2xl border border-slate-800 bg-slate-900 hover:border-blue-500/50 transition duration-300"
+                  className="overflow-hidden rounded-2xl border border-slate-800 bg-slate-900 transition hover:-translate-y-1 hover:border-slate-700"
                 >
 
-                  {/* =================================================
-                      IMAGE
-                  ================================================= */}
+                  {/* IMAGE */}
 
-                  <Link
-                    to={`/blog/${blog._id}`}
-                    className="block overflow-hidden"
-                  >
+                  {blog.image ? (
+                    <img
+                      src={blog.image}
+                      alt={blog.title}
+                      className="h-48 w-full object-cover"
+                    />
+                  ) : (
+                    <div className="flex h-48 w-full items-center justify-center bg-slate-800">
+                      <span className="text-5xl">
+                        📝
+                      </span>
+                    </div>
+                  )}
 
-                    {blog.image ? (
-                      <img
-                        src={blog.image}
-                        alt={blog.title}
-                        className="h-48 sm:h-52 w-full object-cover transition duration-500 group-hover:scale-105"
-                      />
-                    ) : (
-                      <div className="h-48 sm:h-52 bg-slate-800 flex items-center justify-center">
+                  {/* CONTENT */}
 
-                        <span className="text-5xl">
-                          📝
-                        </span>
+                  <div className="p-5 sm:p-6">
 
-                      </div>
-                    )}
+                    <h2 className="text-xl font-bold leading-tight">
+                      {blog.title}
+                    </h2>
 
-                  </Link>
-
-                  {/* =================================================
-                      CONTENT
-                  ================================================= */}
-
-                  <div className="flex flex-1 flex-col p-5 sm:p-6">
-
-                    {/* TITLE */}
-
-                    <Link
-                      to={`/blog/${blog._id}`}
-                      className="block"
-                    >
-
-                      <h2 className="text-xl sm:text-2xl font-bold leading-tight hover:text-blue-400 transition">
-                        {blog.title}
-                      </h2>
-
-                    </Link>
-
-                    {/* EXCERPT */}
-
-                    <p className="mt-3 sm:mt-4 text-sm sm:text-base text-slate-400 leading-6 sm:leading-7 line-clamp-3">
+                    <p className="mt-3 text-sm leading-6 text-slate-400">
                       {blog.excerpt}
                     </p>
 
-                    {/* =================================================
-                        AUTHOR + DATE
-                    ================================================= */}
+                    {/* META */}
 
-                    <div className="mt-5 sm:mt-6 border-t border-slate-800 pt-4 sm:pt-5">
+                    <div className="mt-5 flex items-center justify-between text-xs text-slate-500">
+                      <span>
+                        {blog.author}
+                      </span>
 
-                      <div className="flex items-start justify-between gap-3">
-
-                        <div className="min-w-0">
-
-                          <p className="text-xs sm:text-sm text-slate-500">
-                            Written by
-                          </p>
-
-                          <p className="mt-1 text-xs sm:text-sm font-medium text-slate-300 break-all">
-                            {blog.author}
-                          </p>
-
-                        </div>
-
-                        <div className="shrink-0 text-right">
-
-                          <p className="text-xs sm:text-sm text-slate-500">
-                            Published
-                          </p>
-
-                          <p className="mt-1 text-xs text-slate-600">
-                            {new Date(
-                              blog.createdAt
-                            ).toLocaleDateString(
-                              "en-IN",
-                              {
-                                day: "numeric",
-                                month: "short",
-                                year: "numeric",
-                              }
-                            )}
-                          </p>
-
-                        </div>
-
-                      </div>
-
+                      <span>
+                        {new Date(
+                          blog.createdAt
+                        ).toLocaleDateString(
+                          "en-IN",
+                          {
+                            day: "numeric",
+                            month: "short",
+                            year: "numeric",
+                          }
+                        )}
+                      </span>
                     </div>
 
-                    {/* =================================================
-                        BUTTONS
-                    ================================================= */}
+                    {/* ACTIONS */}
 
-                    <div className="mt-5 sm:mt-6 space-y-3">
+                    <div className="mt-6 flex items-center justify-between gap-3">
 
-                      {/* LIKE */}
+                      <button
+                        onClick={() =>
+                          navigate(
+                            `/blog/${blog._id}`
+                          )
+                        }
+                        className="rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-blue-700 transition"
+                      >
+                        Read More
+                      </button>
 
                       <button
                         onClick={() =>
                           handleLike(blog._id)
                         }
-                        disabled={
-                          likingBlog === blog._id
-                        }
-                        className={`w-full rounded-lg px-4 py-3 text-sm sm:text-base font-semibold transition ${
-                          hasLiked(blog)
-                            ? "bg-red-600 text-white hover:bg-red-700"
-                            : "bg-slate-800 text-slate-200 hover:bg-slate-700"
-                        } disabled:opacity-50 disabled:cursor-not-allowed`}
+                        className={`rounded-lg border px-4 py-2.5 text-sm font-semibold transition ${
+                          liked
+                            ? "border-red-700 bg-red-950 text-red-400"
+                            : "border-slate-700 text-slate-300 hover:border-red-700 hover:text-red-400"
+                        }`}
                       >
-
-                        {likingBlog === blog._id ? (
-                          "Updating..."
-                        ) : hasLiked(blog) ? (
-                          <>
-                            ❤️ Liked{" "}
-                            {blog.likes || 0}
-                          </>
-                        ) : (
-                          <>
-                            🤍 Like{" "}
-                            {blog.likes || 0}
-                          </>
-                        )}
-
+                        {liked ? "❤️" : "🤍"}{" "}
+                        {blog.likes || 0}
                       </button>
-
-                      {/* READ MORE */}
-
-                      <Link
-                        to={`/blog/${blog._id}`}
-                        className="block w-full rounded-lg border border-slate-700 px-4 py-3 text-center text-sm sm:text-base font-semibold text-blue-400 hover:bg-slate-800 hover:border-blue-500 transition"
-                      >
-                        Read More →
-                      </Link>
 
                     </div>
 
                   </div>
-
                 </article>
-
-              ))}
-
-            </div>
+              );
+            })}
 
           </section>
         )}
 
       </main>
-
     </div>
   );
 }
