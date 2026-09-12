@@ -1,5 +1,5 @@
 <div align="center">
-  # 🚀 Full-Stack Developer Portfolio & Blog
+   🚀 Full-Stack Developer Portfolio & Blog
 </div>
 
 
