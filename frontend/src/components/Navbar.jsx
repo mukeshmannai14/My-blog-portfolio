@@ -135,9 +135,9 @@ function Navbar() {
             to="/home"
             className="text-xl sm:text-2xl font-bold text-white shrink-0"
           >
-            My
+          
             <span className="text-blue-500">
-              Portfolio
+             MK
             </span>
           </Link>
 
