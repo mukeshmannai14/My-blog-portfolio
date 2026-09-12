@@ -1,4 +1,7 @@
-# 🚀 Full-Stack Developer Portfolio & Blog
+<div align="center">
+  # 🚀 Full-Stack Developer Portfolio & Blog
+</div>
+
 
 <div align="center">
 
