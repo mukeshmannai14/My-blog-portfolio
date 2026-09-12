@@ -17,19 +17,13 @@ import ProtectedRoute from "./components/ProtectedRoute.jsx";
 function App() {
   return (
     <Routes>
-      {/* =========================
-          DEFAULT
-      ========================= */}
-
+      {/* DEFAULT */}
       <Route
         path="/"
         element={<Navigate to="/login" replace />}
       />
 
-      {/* =========================
-          AUTH
-      ========================= */}
-
+      {/* AUTH */}
       <Route
         path="/login"
         element={<Login />}
@@ -40,10 +34,7 @@ function App() {
         element={<Signup />}
       />
 
-      {/* =========================
-          HOME
-      ========================= */}
-
+      {/* HOME */}
       <Route
         path="/home"
         element={
@@ -53,10 +44,7 @@ function App() {
         }
       />
 
-      {/* =========================
-          ABOUT
-      ========================= */}
-
+      {/* ABOUT */}
       <Route
         path="/about"
         element={
@@ -66,10 +54,7 @@ function App() {
         }
       />
 
-      {/* =========================
-          SKILLS
-      ========================= */}
-
+      {/* SKILLS */}
       <Route
         path="/skills"
         element={
@@ -79,10 +64,7 @@ function App() {
         }
       />
 
-      {/* =========================
-          PROJECTS
-      ========================= */}
-
+      {/* PROJECTS */}
       <Route
         path="/projects"
         element={
@@ -92,10 +74,7 @@ function App() {
         }
       />
 
-      {/* =========================
-          BLOG
-      ========================= */}
-
+      {/* BLOG */}
       <Route
         path="/blog"
         element={
@@ -105,10 +84,7 @@ function App() {
         }
       />
 
-      {/* =========================
-          BLOG DETAILS
-      ========================= */}
-
+      {/* BLOG DETAILS */}
       <Route
         path="/blog/:id"
         element={
@@ -118,10 +94,7 @@ function App() {
         }
       />
 
-      {/* =========================
-          ADMIN DASHBOARD
-      ========================= */}
-
+      {/* ADMIN */}
       <Route
         path="/admin"
         element={
@@ -131,10 +104,7 @@ function App() {
         }
       />
 
-      {/* =========================
-          ADMIN CONTACT MESSAGES
-      ========================= */}
-
+      {/* ADMIN MESSAGES */}
       <Route
         path="/admin/messages"
         element={
@@ -144,10 +114,7 @@ function App() {
         }
       />
 
-      {/* =========================
-          CONTACT
-      ========================= */}
-
+      {/* CONTACT */}
       <Route
         path="/contact"
         element={

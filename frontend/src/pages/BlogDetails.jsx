@@ -262,7 +262,7 @@ function BlogDetails() {
 
           <div className="mt-8">
 
-            <p className="whitespace-pre-wrap break-words text-base leading-8 text-slate-300 sm:text-lg">
+            <p className="whitespace-pre-wrap wrap-break-word text-base leading-8 text-slate-300 sm:text-lg">
               {blog.content}
             </p>
 
